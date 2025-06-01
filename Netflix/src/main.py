@@ -1,8 +1,10 @@
 # Importação de classes
-from controllers.movies.MovieController import MoviesController
+from src.controllers.movie_controller import MoviesController
 
-# Instânciamento da classe de filme
-movieController = MoviesController()
+def main():
 
-# Regsitra um novo filme no catalogo
-print(movieController.save('Exterminador do Futuro: A rebelião das Máquinas', 2025))
+    # Instânciamento da classe de filme
+    movieController = MoviesController()
+
+    # Registra um novo filme no catálogo
+    movieController.save('Avatar: Caminho da Água', 2025)

@@ -2,6 +2,6 @@
 from dataclasses import dataclass
 
 @dataclass
-class MovieData:
+class MovieDto:
     title: str
     year: int

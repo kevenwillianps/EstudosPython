@@ -1,10 +1,10 @@
 from sqlalchemy import create_engine, MetaData, Table, Column, Integer, String, text
-from DTOs.MovieDto import MovieData
+from src.dtos.movie_dto import MovieDto
 
-class MoviesRepository:
+class MovieRepository:
 
-    def __init__(self, movieData: MovieData):
-        self.movieData = movieData
+    def __init__(self, movieDto: MovieDto):
+        self.movieDto = movieDto
         self.engine = create_engine("sqlite:///meubanco.db", echo=True)
 
         # Metadados e tabela
@@ -25,8 +25,8 @@ class MoviesRepository:
             conn.execute(
                 text("INSERT INTO filmes (name, year) VALUES (:name, :year)"),
                 {
-                    "name": self.movieData.title,
-                    "year": self.movieData.year
+                    "name": self.movieDto.title,
+                    "year": self.movieDto.year
                 }
             )
             conn.commit()
