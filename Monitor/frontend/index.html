@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Monitor de Sistema Completo</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        body { background: #f8f9fa; padding: 20px; }
+        .card { margin-bottom: 20px; }
+        canvas { max-height: 300px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mb-4 text-center">Monitor de Sistema - Completo</h1>
+
+        <div class="row">
+            <!-- Bloco CPU -->
+            <div class="col-md-4">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <h5 class="card-title">CPU</h5>
+                        <p>Uso: <span id="cpu_percent">-</span>%</p>
+                        <p>Núcleos: <span id="cpu_cores">-</span></p>
+                        <p>Freq. Atual: <span id="cpu_freq_current">-</span> MHz</p>
+                        <p>Freq. Máxima: <span id="cpu_freq_max">-</span> MHz</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bloco Memória -->
+            <div class="col-md-4">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <h5 class="card-title">Memória</h5>
+                        <p>Uso: <span id="mem_percent">-</span>%</p>
+                        <p>Total: <span id="mem_total">-</span></p>
+                        <p>Usada: <span id="mem_used">-</span></p>
+                        <p>Disponível: <span id="mem_available">-</span></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bloco Disco -->
+            <div class="col-md-4">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <h5 class="card-title">Disco</h5>
+                        <p>Uso: <span id="disk_percent">-</span>%</p>
+                        <p>Total: <span id="disk_total">-</span></p>
+                        <p>Usado: <span id="disk_used">-</span></p>
+                        <p>Disponível: <span id="disk_free">-</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Uptime -->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card shadow">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">Tempo de Atividade</h5>
+                        <p><span id="uptime">-</span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráficos -->
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <h5 class="card-title">CPU</h5>
+                        <canvas id="cpuChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <h5 class="card-title">Memória</h5>
+                        <canvas id="memoryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <h5 class="card-title">Disco</h5>
+                        <canvas id="diskChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const socket = io();
+
+        function formatUptime(seconds) {
+            const d = Math.floor(seconds / (3600*24));
+            seconds  -= d*3600*24;
+            const h = Math.floor(seconds / 3600);
+            seconds  -= h*3600;
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return `${d}d ${h}h ${m}m ${s}s`;
+        }
+
+        const labels = Array(30).fill("");
+
+        const cpuChart = new Chart(document.getElementById('cpuChart'), {
+            type: 'line',
+            data: { labels: labels, datasets: [{ label: 'CPU (%)', data: [], borderColor: '#dc3545', tension: 0.3 }] }
+        });
+
+        const memoryChart = new Chart(document.getElementById('memoryChart'), {
+            type: 'line',
+            data: { labels: labels, datasets: [{ label: 'Memória (%)', data: [], borderColor: '#0d6efd', tension: 0.3 }] }
+        });
+
+        const diskChart = new Chart(document.getElementById('diskChart'), {
+            type: 'line',
+            data: { labels: labels, datasets: [{ label: 'Disco (%)', data: [], borderColor: '#ffc107', tension: 0.3 }] }
+        });
+
+        socket.on('update', function(data) {
+            // Atualiza dados escritos
+            document.getElementById('cpu_percent').innerText = data.cpu.percent;
+            document.getElementById('cpu_cores').innerText = data.cpu.cores;
+            document.getElementById('cpu_freq_current').innerText = data.cpu.freq_current.toFixed(2);
+            document.getElementById('cpu_freq_max').innerText = data.cpu.freq_max.toFixed(2);
+
+            document.getElementById('mem_percent').innerText = data.memory.percent;
+            document.getElementById('mem_total').innerText = data.memory.total;
+            document.getElementById('mem_used').innerText = data.memory.used;
+            document.getElementById('mem_available').innerText = data.memory.available;
+
+            document.getElementById('disk_percent').innerText = data.disk.percent;
+            document.getElementById('disk_total').innerText = data.disk.total;
+            document.getElementById('disk_used').innerText = data.disk.used;
+            document.getElementById('disk_free').innerText = data.disk.free;
+
+            document.getElementById('uptime').innerText = formatUptime(data.uptime);
+
+            // Atualiza gráficos
+            updateChart(cpuChart, data.cpu.percent);
+            updateChart(memoryChart, data.memory.percent);
+            updateChart(diskChart, data.disk.percent);
+        });
+
+        function updateChart(chart, value) {
+            chart.data.datasets[0].data.push(value);
+            if (chart.data.datasets[0].data.length > 30) {
+                chart.data.datasets[0].data.shift();
+            }
+            chart.update();
+        }
+    </script>
+</body>
+</html>

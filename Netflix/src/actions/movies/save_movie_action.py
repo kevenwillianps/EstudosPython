@@ -1,3 +1,4 @@
+# Importação de classes
 from src.dtos.movie_dto import MovieDto
 from src.repositories.movie_repository import MovieRepository
 
@@ -9,7 +10,7 @@ class SaveMovieAction:
         self.movieDto = movieDto
 
     """ Método responsável por executar registrar os dados do filme """
-    def save(self):
+    def execute(self):
 
         # Mensagem de andamento
         print(f"Registrando filme...")
@@ -19,3 +20,6 @@ class SaveMovieAction:
 
         # Executa o método de salvar
         movieRepository.save()
+
+        # Mensagem de andamento
+        print(f"Filme registrado com sucesso...")

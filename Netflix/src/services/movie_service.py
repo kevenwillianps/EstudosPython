@@ -16,12 +16,11 @@ class MovieService:
 
         # Registra um novo filme
         saveMovieAction = SaveMovieAction(self.movieDto)
-        saveMovieAction.save()
+        saveMovieAction.execute()
 
         # Registra um novo log
         logMovieAction = LogMovieAction(self.movieDto)
-        logMovieAction.save()
-        sleep(1)
+        logMovieAction.execute()
 
     """ Método responsável por executar a action de remover o registro """
     def delete(self):
